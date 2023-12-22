@@ -17,14 +17,14 @@ main = do
   defaultMain tData
 
 sizes :: [Int]
-sizes = [ 10, 1000, 100000 ]
+sizes = [ 10, 100, 1000, 10000 ]
 
 benchmark :: Int -> IO Benchmark
 benchmark size = do
   dataN <- randoms size 3
   let name n = concat [n, " - ", show size]
       random    = mk (name "Random") dataN map
-      expensive = mk (name "Expensive-Random") dataN (\f -> map (f . map (\x -> replicate 10 0 ++ [x])))
+      expensive = mk (name "Expensive-Random") dataN (\f -> map (f . map (\x -> replicate 500 0 ++ [x])))
       sorted    = mk (name "Sorted") [1..size] id
       reversed  = mk (name "Reverse-Sorted") (reverse [1..size]) id
   pure $ bgroup "sort" [expensive] -- [random, sorted, reversed, expensive]
