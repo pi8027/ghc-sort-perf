@@ -10,6 +10,7 @@ executable sort-perf
     build-depends:    random, criterion, base ^>=4.16.4.0
     other-modules:    Sorts.New3WM,
                       Sorts.New4WM,
+                      Sorts.New5WMBinPart,
                       Sorts.New5WM,
                       Sorts.Old
     ghc-options:      -Wall -XBangPatterns
