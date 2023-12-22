@@ -1,4 +1,5 @@
 module Sorts.New3WM (sort) where
+import Data.List.NonEmpty (NonEmpty(..))
 
 sort :: Ord a => [a] -> [a]
 sort = sortBy compare
@@ -38,9 +39,9 @@ sortBy cmp = mergeAll . sequences
     merge as []   = as
 
     merge' as@(a:as') bs@(b:bs') cs@(c:cs')
-      | a_gt_b, b_gt_c = c : merge'gt as bs cs'  -- a > b > c
+      | a_gt_b, b_gt_c = c : merge'gt as (b:|bs') cs'  -- a > b > c
       | a_gt_b         = b : merge'   as bs' cs  -- a > b <= c
-      | a_gt_c         = c : merge'le as bs cs'  -- c < a <= b
+      | a_gt_c         = c : merge'le (a:|as') bs cs'  -- c < a <= b
       | otherwise      = a : merge'   as' bs cs  -- c >= a <= b
       where a_gt_b = a `gt` b
             a_gt_c = a `gt` c
@@ -49,15 +50,15 @@ sortBy cmp = mergeAll . sequences
     merge' as [] cs = merge as cs
     merge' as bs [] = merge as bs
 
-    merge'gt as@(a:as') bs@(b:bs') cs@(c:cs')
+    merge'gt as bs@(b:|bs') cs@(c:cs')
       | b_gt_c    = c : merge'gt as bs cs'  -- a > b > c
       | otherwise = b : merge'   as bs' cs  -- a > b <= c
       where b_gt_c = b `gt` c
-    merge'gt as (b:bs) [] = b : merge as bs
+    merge'gt as (b:|bs) [] = b : merge as bs
 
-    merge'le as@(a:as') bs@(b:bs') cs@(c:cs')
+    merge'le as@(a:|as') bs cs@(c:cs')
       | a_gt_c         = c : merge'le as bs cs'  -- c < a <= b
       | otherwise      = a : merge'   as' bs cs  -- c >= a <= b
       where a_gt_c = a `gt` c
-    merge'le (a:as) bs [] = a : merge as bs
+    merge'le (a:|as) bs [] = a : merge as bs
 
