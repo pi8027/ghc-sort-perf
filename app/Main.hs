@@ -1,3 +1,4 @@
+{-# LANGUAGE NumericUnderscores #-}
 module Main where
 
 import Test.Tasty.Bench ( bench, bgroup, defaultMain, nf, Benchmark, Benchmarkable )
@@ -5,7 +6,7 @@ import Test.Tasty.QuickCheck
 import System.Random (randomRIO)
 
 import qualified Sorts.New3WM
-import qualified Sorts.New5WM
+import qualified Sorts.New3WMOpt
 import qualified Sorts.Old
 
 import Control.Monad (replicateM)
@@ -14,32 +15,28 @@ import Control.DeepSeq (NFData)
 main :: IO ()
 main = do
   tData <- mapM benchmark sizes
-  defaultMain tData
+  defaultMain $ test : tData
+
+test = testProperty "orig = 3wm = 3wm'" $ \d -> allEq [Sorts.Old.sort (d :: [Int]), Sorts.New3WM.sort d, Sorts.New3WMOpt.sort d]
 
 sizes :: [Int]
-sizes = [ 10, 100, 1000, 10000 ]
+sizes = [ 10_000, 100_000, 1_000_000 ]
 
 benchmark :: Int -> IO Benchmark
 benchmark size = do
-  dataN <- randoms size 3
+  dataN <- randoms size 10
   let name n = concat [n, " - ", show size]
       random    = mk (name "Random") dataN map
       expensive = mk (name "Expensive-Random") dataN (\f -> map (f . map (\x -> replicate 500 0 ++ [x])))
       sorted    = mk (name "Sorted") [1..size] id
       reversed  = mk (name "Reverse-Sorted") (reverse [1..size]) id
-  pure $ bgroup "sort" [expensive, random, sorted, reversed, expensive]
-
-test :: (a -> [Int]) -> [a] -> Benchmarkable
-test = nf . map
+  pure $ bgroup "sort" [random]--, sorted, reversed]
 
 mk :: (Ord a, NFData b) => String -> c -> (([a] -> [a]) -> c -> b) -> Benchmark
 mk name dataN f = bgroup name 
   [ bench "original" $ foo Sorts.Old.sort
   , bench "3 way merge" $ foo Sorts.New3WM.sort
-  -- , bench "4 way merge" $ nf Sorts.New4WM.sort sortedN
-  -- , bench "5 way merge no intermediate" $ test Sorts.New5WMBinPart.sort dataN
-  , bench "5 way merge" $ foo Sorts.New5WM.sort
-  , testProperty "orig = 3wm = 5wm" $ \d -> allEq [Sorts.Old.sort (d :: [Int]), Sorts.New3WM.sort d, Sorts.New5WM.sort d]
+  , bench "3 way merge optimized" $ foo Sorts.New3WMOpt.sort
   ]
   where foo g = nf (f g) dataN
 
@@ -48,4 +45,4 @@ allEq [] = True
 allEq (x : xs) = all (== x) xs
 
 randoms :: Int -> Int -> IO [[Int]]
-randoms n m = replicateM m $ replicateM n $ randomRIO (0, 10000)
+randoms n m = replicateM m $ replicateM n $ randomRIO (0, 10_000)
