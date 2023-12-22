@@ -12,12 +12,24 @@ import qualified Sorts.Old
 import Control.Monad (replicateM)
 import Control.DeepSeq (NFData)
 
+import Test.Tasty.Providers (TestTree)
+import Data.Ord (comparing)
+
 main :: IO ()
 main = do
   tData <- mapM benchmark sizes
-  defaultMain $ test : tData
+  defaultMain $ testCorrect : testStable : tData
 
-test = testProperty "orig = 3wm = 3wm'" $ \d -> allEq [Sorts.Old.sort (d :: [Int]), Sorts.New3WM.sort d, Sorts.New3WMOpt.sort d]
+sorts :: Ord a => (a -> a -> Ordering) -> [[a] -> [a]]
+sorts cmp = ($ cmp) <$> [Sorts.Old.sortBy, Sorts.New3WM.sortBy, Sorts.New3WMOpt.sortBy]
+
+testCorrect :: TestTree
+testCorrect = testProperty "orig = 3wm = 3wm'" $
+  \d -> allEq $ map (\f -> f (d :: [Int])) (sorts compare)
+
+testStable :: TestTree
+testStable = testProperty "stable" $
+  \d -> allEq $ map (\f -> f $ zip (d :: [Int]) [0..]) (sorts (comparing fst))
 
 sizes :: [Int]
 sizes = [ 10_000, 100_000, 1_000_000 ]
@@ -35,8 +47,8 @@ benchmark size = do
 mk :: (Ord a, NFData b) => String -> c -> (([a] -> [a]) -> c -> b) -> Benchmark
 mk name dataN f = bgroup name 
   [ bench "original" $ foo Sorts.Old.sort
-  , bench "3 way merge" $ foo Sorts.New3WM.sort
   , bench "3 way merge optimized" $ foo Sorts.New3WMOpt.sort
+  , bench "3 way merge" $ foo Sorts.New3WM.sort
   ]
   where foo g = nf (f g) dataN
 

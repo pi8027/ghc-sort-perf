@@ -1,4 +1,4 @@
-module Sorts.New3WM (sort) where
+module Sorts.New3WM (sort, sortBy) where
 import Data.List.NonEmpty (NonEmpty(..))
 
 sort :: Ord a => [a] -> [a]

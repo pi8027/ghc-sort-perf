@@ -1,4 +1,4 @@
-module Sorts.Old (sort) where
+module Sorts.Old (sort, sortBy) where
 
 sort :: Ord a => [a] -> [a]
 sort = sortBy compare
