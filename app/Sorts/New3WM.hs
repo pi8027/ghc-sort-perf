@@ -13,7 +13,7 @@ sortBy cmp = mergeAll . sequences
     sequences xs = [xs]
 
     descending a as (b:bs)
-      | a `cmp` b == GT = descending b (a:as) bs
+      | a `cmp` b /= LT = descending b (a:as) bs
     descending a as bs  = (a:as): sequences bs
 
     ascending a as (b:bs)
@@ -33,7 +33,7 @@ sortBy cmp = mergeAll . sequences
     x `gt` y = x `cmp` y == GT
 
     merge as@(a:as') bs@(b:bs')
-      | a `gt` b = b : merge as  bs'
+      | a `gt` b   = b : merge as  bs'
       | otherwise  = a : merge as' bs
     merge [] bs   = bs
     merge as []   = as
