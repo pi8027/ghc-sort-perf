@@ -1,0 +1,17 @@
+cabal-version:      2.4
+name:               sort-perf
+version:            0.1.0.0
+author:             Jade
+maintainer:         Nils.Jadefalke@gmail.com
+extra-source-files: CHANGELOG.md
+
+executable sort-perf
+    main-is:          Main.hs
+    build-depends:    random, criterion, base ^>=4.16.4.0
+    other-modules:    Sorts.New3WM,
+                      Sorts.New4WM,
+                      Sorts.New5WM,
+                      Sorts.Old
+    ghc-options:      -Wall -XBangPatterns
+    hs-source-dirs:   app
+    default-language: Haskell2010
