@@ -40,10 +40,12 @@ sortBy cmp = mergeAll . sequences
     merge as []   = as
 
     merge' as@(a:as') bs@(b:bs') cs@(c:cs')
-      | a_gt_b, b_gt_c = c : merge' as bs cs'
-      | a_gt_b         = b : merge' as bs' cs
-      | otherwise      = a : merge' as' bs cs
+      | a_gt_b, b_gt_c = c : merge' as bs cs'  -- a > b > c
+      | a_gt_b         = b : merge' as bs' cs  -- a > b <= c
+      | a_gt_c         = c : merge' as bs cs'  -- c < a <= b
+      | otherwise      = a : merge' as' bs cs  -- c >= a <= b
       where a_gt_b = a `gt` b
+            a_gt_c = a `gt` c
             b_gt_c = b `gt` c
     merge' [] bs cs = merge bs cs
     merge' as [] cs = merge as cs
@@ -52,10 +54,17 @@ sortBy cmp = mergeAll . sequences
     merge'' as@(a:as') bs@(b:bs') cs@(c:cs') ds@(d:ds')
       | a_gt_b, b_gt_c, c_gt_d = d : merge'' as bs cs ds'
       | a_gt_b, b_gt_c         = c : merge'' as bs cs' ds
+      | a_gt_b, b_gt_d         = d : merge'' as bs cs ds'
       | a_gt_b                 = b : merge'' as bs' cs ds
+      | a_gt_c, c_gt_d         = d : merge'' as bs cs ds'
+      | a_gt_c                 = c : merge'' as bs cs' ds
+      | a_gt_d                 = d : merge'' as bs cs ds'
       | otherwise              = a : merge'' as' bs cs ds
       where a_gt_b = a `gt` b
+            a_gt_c = a `gt` c
+            a_gt_d = a `gt` d
             b_gt_c = b `gt` c
+            b_gt_d = b `gt` d
             c_gt_d = c `gt` d
     merge'' [] bs cs ds = merge' bs cs ds
     merge'' as [] cs ds = merge' as cs ds
@@ -65,17 +74,32 @@ sortBy cmp = mergeAll . sequences
     merge''' as@(a:as') bs@(b:bs') cs@(c:cs') ds@(d:ds') es@(e:es')
       | a_gt_b, b_gt_c, c_gt_d, d_gt_e = e : merge''' as bs cs ds es'
       | a_gt_b, b_gt_c, c_gt_d         = d : merge''' as bs cs ds' es
+      | a_gt_b, b_gt_c, c_gt_e         = e : merge''' as bs cs ds es'
       | a_gt_b, b_gt_c                 = c : merge''' as bs cs' ds es
+      | a_gt_b, b_gt_d, d_gt_e         = e : merge''' as bs cs ds es'
+      | a_gt_b, b_gt_d                 = d : merge''' as bs cs ds' es
+      | a_gt_b, b_gt_e                 = e : merge''' as bs cs ds es'
       | a_gt_b                         = b : merge''' as bs' cs ds es
+      | a_gt_c, c_gt_d, d_gt_e         = e : merge''' as bs cs ds es'
+      | a_gt_c, c_gt_d                 = d : merge''' as bs cs ds' es
+      | a_gt_c, c_gt_e                 = e : merge''' as bs cs ds es'
+      | a_gt_c                         = c : merge''' as bs cs' ds es
+      | a_gt_d, d_gt_e                 = e : merge''' as bs cs ds es'
+      | a_gt_d                         = d : merge''' as bs cs ds' es
+      | a_gt_e                         = e : merge''' as bs cs ds es'
       | otherwise                      = a : merge''' as' bs cs ds es
       where a_gt_b = a `gt` b
+            a_gt_c = a `gt` c
+            a_gt_d = a `gt` d
+            a_gt_e = a `gt` e
             b_gt_c = b `gt` c
+            b_gt_d = b `gt` d
+            b_gt_e = b `gt` e
             c_gt_d = c `gt` d
-            d_gt_e = d `gt` e 
+            c_gt_e = c `gt` e
+            d_gt_e = d `gt` e
     merge''' [] bs cs ds es = merge'' bs cs ds es
     merge''' as [] cs ds es = merge'' as cs ds es
     merge''' as bs [] ds es = merge'' as bs ds es
     merge''' as bs cs [] es = merge'' as bs cs es
     merge''' as bs cs ds [] = merge'' as bs cs ds
-
-

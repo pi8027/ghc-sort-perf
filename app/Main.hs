@@ -17,7 +17,7 @@ main = do
   defaultMain tData
 
 sizes :: [Int]
-sizes = [ 10, 1000, 1000000]
+sizes = [ 10, 1000, 1000000 ]
 
 benchmark :: Int -> IO Benchmark
 benchmark size = do
@@ -26,7 +26,7 @@ benchmark size = do
       random   = mk (name "Random") dataN map
       sorted   = mk (name "Sorted") [1..size] id
       reversed = mk (name "Reverse-Sorted") (reverse [1..size]) id
-  pure $ bgroup "sort" [random, sorted, reversed]
+  pure $ bgroup "sort" [random]-- , sorted, reversed]
 
 test :: (a -> [Int]) -> [a] -> Benchmarkable
 test = nf . map

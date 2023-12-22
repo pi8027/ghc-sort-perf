@@ -32,19 +32,32 @@ sortBy cmp = mergeAll . sequences
     x `gt` y = x `cmp` y == GT
 
     merge as@(a:as') bs@(b:bs')
-      | a `gt` b  = b : merge as  bs'
-      | otherwise = a : merge as' bs
+      | a `gt` b = b : merge as  bs'
+      | otherwise  = a : merge as' bs
     merge [] bs   = bs
     merge as []   = as
 
     merge' as@(a:as') bs@(b:bs') cs@(c:cs')
-      | a_gt_b, b_gt_c = c : merge' as bs cs'
-      | a_gt_b         = b : merge' as bs' cs
-      | a_gt_c         = c : merge' as bs cs'
-      | otherwise      = a : merge' as' bs cs
+      | a_gt_b, b_gt_c = c : merge'gt as bs cs'  -- a > b > c
+      | a_gt_b         = b : merge'   as bs' cs  -- a > b <= c
+      | a_gt_c         = c : merge'le as bs cs'  -- c < a <= b
+      | otherwise      = a : merge'   as' bs cs  -- c >= a <= b
       where a_gt_b = a `gt` b
-            b_gt_c = b `gt` c
             a_gt_c = a `gt` c
+            b_gt_c = b `gt` c
     merge' [] bs cs = merge bs cs
     merge' as [] cs = merge as cs
     merge' as bs [] = merge as bs
+
+    merge'gt as@(a:as') bs@(b:bs') cs@(c:cs')
+      | b_gt_c    = c : merge'gt as bs cs'  -- a > b > c
+      | otherwise = b : merge'   as bs' cs  -- a > b <= c
+      where b_gt_c = b `gt` c
+    merge'gt as (b:bs) [] = b : merge as bs
+
+    merge'le as@(a:as') bs@(b:bs') cs@(c:cs')
+      | a_gt_c         = c : merge'le as bs cs'  -- c < a <= b
+      | otherwise      = a : merge'   as' bs cs  -- c >= a <= b
+      where a_gt_c = a `gt` c
+    merge'le (a:as) bs [] = a : merge as bs
+
