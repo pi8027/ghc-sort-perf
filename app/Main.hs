@@ -1,34 +1,44 @@
 module Main where
 
-import Criterion.Main ( defaultMain, bgroup, nf, bench, Benchmark )
-import qualified Data.List (sort)
+import Test.Tasty.Bench ( bench, bgroup, defaultMain, nf, Benchmark, Benchmarkable )
 import System.Random (randomRIO)
 
 import qualified Sorts.New3WM
-import qualified Sorts.New4WM
 import qualified Sorts.New5WM
-import qualified Sorts.New5WMBinPart
+import qualified Sorts.Old
+
 import Control.Monad (replicateM)
+import Control.DeepSeq (NFData)
 
 main :: IO ()
 main = do
   tData <- mapM benchmark sizes
-  defaultMain [ bgroup "sort" tData]
+  defaultMain tData
 
 sizes :: [Int]
-sizes = [10, 100, 10000, 100000, 500000, 1000000, 2500000]
-
+sizes = [ 10, 1000, 1000000]
 
 benchmark :: Int -> IO Benchmark
-benchmark n = do
-  dataN <- randoms n
-  pure $ bgroup ("Random - " ++ show n)
-    [ bench "original" $ nf Data.List.sort dataN
-    , bench "3 way merge" $ nf Sorts.New3WM.sort dataN
-    , bench "4 way merge" $ nf Sorts.New4WM.sort dataN
-    , bench "5 way merge no intermediate" $ nf Sorts.New5WMBinPart.sort dataN
-    , bench "5 way merge" $ nf Sorts.New5WM.sort dataN
-    ]
+benchmark size = do
+  dataN <- randoms size 10
+  let name n = concat [n, " - ", show size]
+      random   = mk (name "Random") dataN map
+      sorted   = mk (name "Sorted") [1..size] id
+      reversed = mk (name "Reverse-Sorted") (reverse [1..size]) id
+  pure $ bgroup "sort" [random, sorted, reversed]
 
-randoms :: Int -> IO [Int]
-randoms n = replicateM n $ randomRIO (0, 100000)
+test :: (a -> [Int]) -> [a] -> Benchmarkable
+test = nf . map
+
+mk :: (Ord a, NFData b) => String -> c -> (([a] -> [a]) -> c -> b) -> Benchmark
+mk name dataN f = bgroup name 
+  [ bench "original" $ foo Sorts.Old.sort
+  , bench "3 way merge" $ foo Sorts.New3WM.sort
+  -- , bench "4 way merge" $ nf Sorts.New4WM.sort sortedN
+  -- , bench "5 way merge no intermediate" $ test Sorts.New5WMBinPart.sort dataN
+  , bench "5 way merge" $ foo Sorts.New5WM.sort
+  ]
+  where foo g = nf (f g) dataN
+
+randoms :: Int -> Int -> IO [[Int]]
+randoms n m = replicateM m $ replicateM n $ randomRIO (0, 10000)
