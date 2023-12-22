@@ -40,9 +40,11 @@ sortBy cmp = mergeAll . sequences
     merge' as@(a:as') bs@(b:bs') cs@(c:cs')
       | a_gt_b, b_gt_c = c : merge' as bs cs'
       | a_gt_b         = b : merge' as bs' cs
+      | a_gt_c         = c : merge' as bs cs'
       | otherwise      = a : merge' as' bs cs
       where a_gt_b = a `gt` b
             b_gt_c = b `gt` c
+            a_gt_c = a `gt` c
     merge' [] bs cs = merge bs cs
     merge' as [] cs = merge as cs
     merge' as bs [] = merge as bs

@@ -1,6 +1,7 @@
 module Main where
 
 import Test.Tasty.Bench ( bench, bgroup, defaultMain, nf, Benchmark, Benchmarkable )
+import Test.Tasty.QuickCheck
 import System.Random (randomRIO)
 
 import qualified Sorts.New3WM
@@ -37,8 +38,12 @@ mk name dataN f = bgroup name
   -- , bench "4 way merge" $ nf Sorts.New4WM.sort sortedN
   -- , bench "5 way merge no intermediate" $ test Sorts.New5WMBinPart.sort dataN
   , bench "5 way merge" $ foo Sorts.New5WM.sort
+  , testProperty "orig = 3wm = 5wm" $ \d -> allEq [Sorts.Old.sort (d :: [Int]), Sorts.New3WM.sort d, Sorts.New5WM.sort d]
   ]
   where foo g = nf (f g) dataN
+
+allEq [] = True
+allEq (x : xs) = all (== x) xs
 
 randoms :: Int -> Int -> IO [[Int]]
 randoms n m = replicateM m $ replicateM n $ randomRIO (0, 10000)
