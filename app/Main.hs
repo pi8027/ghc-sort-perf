@@ -27,7 +27,7 @@ benchmark size = do
       expensive = mk (name "Expensive-Random") dataN (\f -> map (f . map (\x -> replicate 500 0 ++ [x])))
       sorted    = mk (name "Sorted") [1..size] id
       reversed  = mk (name "Reverse-Sorted") (reverse [1..size]) id
-  pure $ bgroup "sort" [expensive] -- [random, sorted, reversed, expensive]
+  pure $ bgroup "sort" [expensive, random, sorted, reversed, expensive]
 
 test :: (a -> [Int]) -> [a] -> Benchmarkable
 test = nf . map
