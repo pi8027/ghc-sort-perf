@@ -25,11 +25,11 @@ sortBy cmp = mergeAll . sequences
     mergeAll xs  = mergeAll (mergePairs xs)
 
     -- optional case that'll speed up the last merge a tiny bit
-    -- mergePairs [a,b,c]          = [merge' a b c]
-    mergePairs (a:b:c:xs)       = let !x = merge' a b c
-                                  in x : mergePairs xs
-    mergePairs [a,b]            = [merge a b]
-    mergePairs xs               = xs
+    mergePairs [a,b,c]       = [merge' a b c]
+    mergePairs (a:b:c:xs) = let !x = merge' a b c
+                            in x : mergePairs xs
+    mergePairs [a,b]      = [merge a b]
+    mergePairs xs         = xs
 
     x `gt` y = x `cmp` y == GT
 

@@ -32,7 +32,7 @@ testStable = testProperty "stable" $
   \d -> allEq $ map (\f -> f $ zip (d :: [Int]) [0..]) (sorts (comparing fst))
 
 sizes :: [Int]
-sizes = [ 10_000, 100_000, 1_000_000 ]
+sizes = [ 100, 10_000, 100_000, 1_000_000 ]
 
 benchmark :: Int -> IO Benchmark
 benchmark size = do
@@ -42,13 +42,13 @@ benchmark size = do
       expensive = mk (name "Expensive-Random") dataN (\f -> map (f . map (\x -> replicate 500 0 ++ [x])))
       sorted    = mk (name "Sorted") [1..size] id
       reversed  = mk (name "Reverse-Sorted") (reverse [1..size]) id
-  pure $ bgroup "sort" [random]--, sorted, reversed]
+  pure $ bgroup "sort" [random, sorted]--, reversed]
 
 mk :: (Ord a, NFData b) => String -> c -> (([a] -> [a]) -> c -> b) -> Benchmark
 mk name dataN f = bgroup name 
   [ bench "original" $ foo Sorts.Old.sort
-  , bench "3 way merge optimized" $ foo Sorts.New3WMOpt.sort
   , bench "3 way merge" $ foo Sorts.New3WM.sort
+  , bench "3 way merge optimized" $ foo Sorts.New3WMOpt.sort
   ]
   where foo g = nf (f g) dataN
 

@@ -24,12 +24,10 @@ sortBy cmp = mergeAll . sequences
     mergeAll [x] = x
     mergeAll xs  = mergeAll (mergePairs xs)
 
-    rec xs !x = x : mergePairs xs
-
-    mergePairs (a:b:c:xs)     = rec xs $ merge' a b c
-    -- mergePairs (a:b:xs)       = rec xs $ merge a b
-    mergePairs [a,b]          = [merge a b]
-    mergePairs xs             = xs
+    mergePairs (a:b:c:xs) = let !x = merge' a b c
+                            in x : mergePairs xs
+    mergePairs [a,b]      = [merge a b]
+    mergePairs xs         = xs
 
     x `gt` y = x `cmp` y == GT
 
