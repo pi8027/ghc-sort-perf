@@ -10,7 +10,6 @@ benchmark sort-perf
     type:             exitcode-stdio-1.0
     build-depends:    deepseq, random, tasty, tasty-quickcheck, tasty-bench, base
     other-modules:    Sorts.New3WM,
-                      Sorts.New3WMOpt,
                       Sorts.Old
     ghc-options:      -Wall -XBangPatterns
     ghc-options:      "-with-rtsopts=-A32m"

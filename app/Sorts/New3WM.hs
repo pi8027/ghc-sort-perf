@@ -7,29 +7,31 @@ sort = sortBy compare
 sortBy :: (a -> a -> Ordering) -> [a] -> [a]
 sortBy cmp = mergeAll . sequences
   where
+    x `gt` y = x `cmp` y == GT
+
     sequences (a:b:xs)
-      | a `cmp` b == GT = descending b [a]  xs
-      | otherwise       = ascending  b (a:) xs
+      | a `gt` b  = descending b [a]  xs
+      | otherwise = ascending  b (a:) xs
     sequences xs = [xs]
 
     descending a as (b:bs)
-      | a `cmp` b == GT = descending b (a:as) bs
-    descending a as bs  = (a:as): sequences bs
+      | a `gt` b       = descending b (a:as) bs
+    descending a as bs = (a:as): sequences bs
 
     ascending a as (b:bs)
-      | a `cmp` b /= GT = ascending b (\ys -> as (a:ys)) bs
-    ascending a as bs   = let !x = as [a]
-                          in x : sequences bs
+      | not (a `gt` b) = ascending b (\ys -> as (a:ys)) bs
+    ascending a as bs  = let !x = as [a]
+                         in x : sequences bs
 
     mergeAll [x] = x
     mergeAll xs  = mergeAll (mergePairs xs)
 
+    mergePairs [a, b, c]  = [merge' a b c]
     mergePairs (a:b:c:xs) = let !x = merge' a b c
                             in x : mergePairs xs
     mergePairs [a,b]      = [merge a b]
     mergePairs xs         = xs
 
-    x `gt` y = x `cmp` y == GT
 
     merge as@(a:as') bs@(b:bs')
       | a `gt` b   = b : merge as  bs'
@@ -60,4 +62,3 @@ sortBy cmp = mergeAll . sequences
       | otherwise      = a : merge'   as' bs cs  -- c >= a <= b
       where a_gt_c = a `gt` c
     merge'le (a:|as) bs [] = a : merge as bs
-
