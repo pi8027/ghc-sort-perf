@@ -6,6 +6,7 @@ import Test.Tasty.QuickCheck
 import System.Random (randomRIO)
 
 import qualified Sorts.New3WM
+import qualified Sorts.New3WMOpt
 import qualified Sorts.Old
 
 import Control.Monad (replicateM)
@@ -20,7 +21,7 @@ main = do
   defaultMain $ testCorrect : testStable : tData
 
 sorts :: Ord a => (a -> a -> Ordering) -> [[a] -> [a]]
-sorts cmp = ($ cmp) <$> [Sorts.Old.sortBy, Sorts.New3WM.sortBy]
+sorts cmp = ($ cmp) <$> [Sorts.Old.sortBy, Sorts.New3WM.sortBy, Sorts.New3WMOpt.sortBy]
 
 testCorrect :: TestTree
 testCorrect = testProperty "correct" $
@@ -31,7 +32,7 @@ testStable = testProperty "stable" $
   \d -> allEq $ map (\f -> f $ zip (d :: [Int]) [(0 :: Int)..]) (sorts (comparing fst))
 
 sizes :: [Int]
-sizes = [ 100, 10_000, 100_000, 1_000_000 ]
+sizes = [ 0, 1, 10, 100, 10_000, 100_000, 1_000_000 ]
 
 benchmark :: Int -> IO Benchmark
 benchmark size = do
@@ -47,6 +48,7 @@ mk :: (Ord a, NFData b) => String -> c -> (([a] -> [a]) -> c -> b) -> Benchmark
 mk name dataN f = bgroup name 
   [ bench "original" $ foo Sorts.Old.sort
   , bench "3 way merge" $ foo Sorts.New3WM.sort
+  , bench "3 way merge optimized" $ foo Sorts.New3WMOpt.sort
   ]
   where foo g = nf (f g) dataN
 
