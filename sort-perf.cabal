@@ -11,6 +11,7 @@ benchmark sort-perf
     build-depends:    deepseq, random, tasty, tasty-quickcheck, tasty-bench, base
     other-modules:    Sorts.New3WM,
                       Sorts.New3WMOpt,
+                      Sorts.New4WM,
                       Sorts.Old
     ghc-options:      -Wall -XBangPatterns
     ghc-options:      "-with-rtsopts=-A32m"
