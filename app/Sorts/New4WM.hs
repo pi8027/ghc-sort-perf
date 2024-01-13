@@ -31,12 +31,13 @@ sortBy cmp ns
     mergeAll [x] = x
     mergeAll xs  = mergeAll (mergePairs xs)
 
-    mergePairs [a,b,c,d,e,f] = [merge3 a b c, merge3 d e f]
-    mergePairs [a,b,c,d,e]   = [merge3 a b c, merge d e]
-    mergePairs (a:b:c:d:xs)  = merge4 a b c d : mergePairs xs
-    mergePairs [a,b,c]       = [merge3 a b c]
+    mergePairs []            = []
+    mergePairs [a]           = [a]
     mergePairs [a,b]         = [merge a b]
-    mergePairs xs            = xs
+    mergePairs [a,b,c]       = [merge3 a b c]
+    mergePairs [a,b,c,d,e]   = [merge3 a b c, merge d e]
+    mergePairs [a,b,c,d,e,f] = [merge3 a b c, merge3 d e f]
+    mergePairs (a:b:c:d:xs)  = merge4 a b c d : mergePairs xs
 
     merge as@(a:as') bs@(b:bs')
       | a `gt` b  = b : merge as  bs'
@@ -84,4 +85,3 @@ sortBy cmp ns
     merge4XY x as bs y cs ds
       | x `gt` y  = y : merge4X x as bs   cs ds
       | otherwise = x : merge4Y   as bs y cs ds
-

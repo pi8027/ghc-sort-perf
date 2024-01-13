@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeApplications #-}
 module Main where
 
-import Test.Tasty.Bench ( bench, bgroup, nf, Benchmark, bcompare, defaultMain )
+import Test.Tasty.Bench ( bench, bgroup, nf, Benchmark, bcompare, defaultMain, Benchmarkable )
 import Test.Tasty.QuickCheck
 import System.Random (randomRIO)
 
@@ -71,22 +71,20 @@ sizes = [ 10_000, 100_000, 1_000_000, 5_000_000 ]
 benchmark :: Int -> IO Benchmark
 benchmark size = do
   dataN <- randoms size
-  let name n = concat [n, " - ", show size]
-      random    = mk' (name "Random") dataN
-      sorted    = mk' (name "Sorted") [1..size]
-  pure $ bgroup "sort" [random]
+  let randomSort  = bgroup "sort" (makeBench dataN id)
+      minimumElem = bgroup "min by sort" (makeBench dataN (take 1))
+      -- comparisons = 
+  pure $ bgroup (show size ++ " Elements") [randomSort, minimumElem]
 
+makeBench :: (NFData b, Ord a) => [a] -> ([a] -> b) -> [Benchmark]
+makeBench _data f = map (\(name, alg) -> compBench name $ nf (f . alg) _data) sorts
 
-mk' :: (NFData a, Ord a) => String -> [a] -> Benchmark
-mk' name _data = bgroup name $ map (uncurry $ makeBench _data) sorts
+compBench :: String -> Benchmarkable -> Benchmark
+-- compBench str
+--  | str == baseline = bench str
+--  | otherwise       = bcompare baseline . bench str
+compBench = bench
 
-makeBench :: NFData b => a -> String -> (a -> b) -> Benchmark
-makeBench _data name alg = {- comp name $-} bench name (nf alg _data)
-
--- comp :: String -> Benchmark -> Benchmark
--- comp name
---  | name /= baseline = bcompare baseline
---  | otherwise        = id
 
 randoms :: Int -> IO [Int]
 randoms n = replicateM n $ randomRIO (0, 10_000)
