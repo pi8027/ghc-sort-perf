@@ -1,5 +1,7 @@
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use sort" #-}
 module Main where
 
 import Test.Tasty.Bench ( bench, bgroup, nf, Benchmark, bcompare, defaultMain, Benchmarkable )
@@ -15,21 +17,26 @@ import qualified Sorts.Old       as Old
 import Control.Monad (replicateM)
 import Control.DeepSeq (NFData)
 
-import Test.Tasty.Providers (TestTree)
-import Data.List ((\\))
+import Test.Tasty.Providers (TestTree, singleTest)
+import Data.List hiding (sort, sortBy)
 import Test.Tasty (testGroup)
 import Data.Semigroup (Arg(..))
 
+import ComparisonProvider (ComparisonTest(..))
+import Data.Data (Typeable)
 
 baseline :: String
 baseline = "Old"
 
-sorts :: Ord a => [(String, [a] -> [a])]
+type ComparisonFunction a = a -> a -> Ordering
+
+
+sorts :: Ord a => [(String, ComparisonFunction a -> [a] -> [a])]
 sorts =
-  [ (baseline, Old.sort)
-  , ("3 Way Merge", N3.sort)
-  , ("3 Way Merge Optimization", N3O.sort)
-  , ("4 Way Merge", N4.sort) ]
+  [ (baseline, Old.sortBy)
+  , ("3 Way Merge", N3.sortBy)
+  , ("3 Way Merge Optimization", N3O.sortBy)
+  , ("4 Way Merge", N4.sortBy) ]
 
 main :: IO ()
 main = do
@@ -42,10 +49,10 @@ testAll = testGroup "List tests"
   , makeTest "stability" (isStable @Int) ]
 
 makeTest :: (Ord a, Arbitrary b, Show b) => String -> (([a] -> [a]) -> [b] -> Property) -> TestTree
-makeTest name f = testGroup name $ map (\(n, alg) -> testProperty n (f alg)) sorts
+makeTest name f = testGroup name $ map (\(n, sortBy) -> testProperty n $ f (sortBy compare)) sorts
 
 isStable :: Ord a => ([Arg a Int] -> [Arg a Int]) -> [a] -> Property
-isStable alg xs = let result = alg (zipWith Arg xs [0..])
+isStable sort xs = let result = sort (zipWith Arg xs [0..])
   in property $ isAscending result
 
 isAscending :: (Eq a, Ord b) => [Arg a b] -> Bool
@@ -57,7 +64,7 @@ isAscending ((Arg x1 i1) : a@((Arg x2 i2) : _))
 
 -- isCorrect :: Ord a => ([a] -> [a]) -> [a] -> Bool
 isCorrect :: Ord a => ([a] -> [a]) -> [a] -> Property
-isCorrect alg xs = let res = alg xs in isSorted res .&&. sameElems res xs
+isCorrect sort xs = let res = sort xs in isSorted res .&&. sameElems res xs
   where sameElems x y = null (x \\ y) && null (y \\ x)
 
 isSorted :: Ord a => [a] -> Bool
@@ -73,11 +80,17 @@ benchmark size = do
   dataN <- randoms size
   let randomSort  = bgroup "sort" (makeBench dataN id)
       minimumElem = bgroup "min by sort" (makeBench dataN (take 1))
-      -- comparisons = 
-  pure $ bgroup (show size ++ " Elements") [randomSort, minimumElem]
+      comparisons = testGroup "comparisons" (makeComps dataN)
+  pure $ bgroup (show size ++ " Elements") [randomSort, minimumElem, comparisons]
 
 makeBench :: (NFData b, Ord a) => [a] -> ([a] -> b) -> [Benchmark]
-makeBench _data f = map (\(name, alg) -> compBench name $ nf (f . alg) _data) sorts
+makeBench _data f = forSorts (\name sortBy -> compBench name $ nf (f . sortBy compare) _data)
+
+makeComps :: (Ord a, NFData a, Typeable a) => [a] -> [TestTree]
+makeComps _data = forSorts (\name sortBy -> singleTest name (ComparisonTest _data sortBy))
+
+forSorts :: Ord a => (String -> (ComparisonFunction a -> [a] -> [a]) -> b) -> [b]
+forSorts f = map (uncurry f) sorts
 
 compBench :: String -> Benchmarkable -> Benchmark
 -- compBench str

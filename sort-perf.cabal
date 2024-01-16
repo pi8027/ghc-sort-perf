@@ -8,8 +8,9 @@ extra-source-files: CHANGELOG.md
 benchmark sort-perf
     main-is:          Main.hs
     type:             exitcode-stdio-1.0
-    build-depends:    deepseq, random, tasty, tasty-quickcheck, tasty-bench, base
-    other-modules:    Sorts.New3WM,
+    build-depends:    tagged, deepseq, random, tasty, tasty-quickcheck, tasty-bench, base
+    other-modules:    ComparisonProvider,
+                      Sorts.New3WM,
                       Sorts.New3WMOpt,
                       Sorts.New4WM,
                       Sorts.Old
