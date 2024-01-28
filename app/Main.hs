@@ -73,7 +73,7 @@ isSorted [_] = True
 isSorted (x:y:xs) = x <= y && isSorted (y:xs)
 
 sizes :: [Int]
-sizes = [ 10_000, 100_000, 1_000_000, 5_000_000 ]
+sizes = [0 .. 10] ++ [ 100, 1000, 10_000, 100_000, 1_000_000 ]
 
 benchmark :: Int -> IO Benchmark
 benchmark size = do
