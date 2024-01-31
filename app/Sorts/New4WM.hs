@@ -35,9 +35,17 @@ sortBy cmp ns
     mergePairs [a]           = [a]
     mergePairs [a,b]         = [merge a b]
     mergePairs [a,b,c]       = [merge3 a b c]
-    mergePairs [a,b,c,d,e]   = [merge3 a b c, merge d e]
-    mergePairs [a,b,c,d,e,f] = [merge3 a b c, merge3 d e f]
-    mergePairs (a:b:c:d:xs)  = merge4 a b c d : mergePairs xs
+    mergePairs [a,b,c,d,e]   = let !x = merge3 a b c
+                                   !y = merge d e
+                               in [x, y]
+    mergePairs [a,b,c,d,e,f] = let !x = merge3 a b c
+                                   !y = merge3 d e f
+                               in [x, y]
+    mergePairs [a,b,c,d,e,f,g,h] = let !x = merge4 a b c d
+                                       !y = merge4 e f g h
+                                   in [x, y]
+    mergePairs (a:b:c:d:xs)  = let !x = merge4 a b c d
+                               in x : mergePairs xs
 
     merge as@(a:as') bs@(b:bs')
       | a `gt` b  = b : merge as  bs'
