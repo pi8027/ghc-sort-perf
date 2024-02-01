@@ -9,8 +9,8 @@ import Control.DeepSeq (NFData(rnf))
 import GHC.IORef (readIORef)
 
 data ComparisonTest a = ComparisonTest
-  { list :: [a]
-  , alg  :: (a -> a -> Ordering) -> [a] -> [a] 
+  { list :: ![a]
+  , alg  :: !((a -> a -> Ordering) -> [a] -> [a])
   }
 
 instance (Typeable a, Ord a, NFData a) => IsTest (ComparisonTest a) where

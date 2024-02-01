@@ -4,12 +4,12 @@
 {-# HLINT ignore "Use sort" #-}
 module Main where
 
-import Test.Tasty.Bench ( bench, bgroup, nf, Benchmark, bcompare, defaultMain, Benchmarkable, locateBenchmark )
+import Test.Tasty.Bench ( bench, bgroup, nf, Benchmark, bcompare, defaultMain, locateBenchmark )
 import Test.Tasty.QuickCheck
 import System.Random (randomRIO)
 
-import qualified Sorts.New3WM    as N3
-import qualified Sorts.New3WMOpt as N3O
+-- import qualified Sorts.New3WM    as N3
+-- import qualified Sorts.New3WMOpt as N3O
 import qualified Sorts.New4WM    as N4
 import qualified Sorts.Old       as Old
 
@@ -25,24 +25,28 @@ import Data.Semigroup (Arg(..))
 import ComparisonProvider (ComparisonTest(..))
 import Data.Data (Typeable)
 import Test.Tasty.Patterns.Printer (printAwkExpr)
-import Debug.Trace
-import Data.Function (on)
 
 baseline :: String
 baseline = "Old"
 
 type ComparisonFunction a = a -> a -> Ordering
 
+sizes :: [Int]
+-- sizes = replicate 20 3
+-- sizes = replicate 10 1_000_000
+sizes = [ 1_000, 10_000, 100_000, 1_000_000 ]
 
 sorts :: Ord a => [(String, ComparisonFunction a -> [a] -> [a])]
-sorts =
-  [ (baseline, Old.sortBy)
+sorts = [
+    ("Old", Old.sortBy)
   -- , ("3 Way Merge", N3.sortBy)
   -- , ("3 Way Merge Optimization", N3O.sortBy)
-  , ("4 Way Merge", N4.sortBy) ]
+  , ("4 Way Merge", N4.sortBy)
+  ]
 
 main :: IO ()
 main = do
+  -- sizes <- readLn
   tData <- mapM benchmark sizes
   defaultMain (testAll : tData)
 
@@ -75,17 +79,15 @@ isSorted [] = True
 isSorted [_] = True
 isSorted (x:y:xs) = x <= y && isSorted (y:xs)
 
-sizes :: [Int]
-sizes = [0 .. 15] {- ++ [ 100, 1000, 10_000, 100_000, 1_000_000 ] -}
 
 benchmark :: Int -> IO Benchmark
 benchmark size = do
   _data <- randoms size
   let name = show size ++ " Elements"
       randomSort  = bgroup' "sort" name _data id
-      minimumElem = bgroup' "min by sort" name _data (take 10)
+      minimumElem = bgroup' "min by sort" name _data (take 1)
       comparisons = testGroup "comparisons" (makeComps _data)
-  pure $ bgroup name [randomSort, minimumElem, comparisons]
+  pure $ bgroup name [randomSort]
 
 
 bgroup' :: (NFData b, Ord a) => String -> String -> [a] -> ([a] -> b) -> Benchmark

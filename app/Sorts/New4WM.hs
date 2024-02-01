@@ -10,7 +10,7 @@ sortBy cmp ns
   | [a,b]     <- ns = merge [a] [b]
   | [a,b,c]   <- ns = merge3 [a] [b] [c]
   | [a,b,c,d] <- ns = merge4 [a] [b] [c] [d]
-  | otherwise       = mergeAll (sequences ns)
+  | otherwise       = merge_all (sequences ns)
   where
     x `gt` y = x `cmp` y == GT
 
@@ -28,24 +28,17 @@ sortBy cmp ns
     ascending a as bs  = let !x = as [a]
                          in x : sequences bs
 
-    mergeAll [x] = x
-    mergeAll xs  = mergeAll (mergePairs xs)
+    merge_all [x] = x
+    merge_all xs  = merge_all (reduce xs)
 
-    mergePairs []            = []
-    mergePairs [a]           = [a]
-    mergePairs [a,b]         = [merge a b]
-    mergePairs [a,b,c]       = [merge3 a b c]
-    mergePairs [a,b,c,d,e]   = let !x = merge3 a b c
-                                   !y = merge d e
-                               in [x, y]
-    mergePairs [a,b,c,d,e,f] = let !x = merge3 a b c
-                                   !y = merge3 d e f
-                               in [x, y]
-    mergePairs [a,b,c,d,e,f,g,h] = let !x = merge4 a b c d
-                                       !y = merge4 e f g h
-                                   in [x, y]
-    mergePairs (a:b:c:d:xs)  = let !x = merge4 a b c d
-                               in x : mergePairs xs
+    reduce []            = []
+    reduce [a]           = [a]
+    reduce [a,b]         = [merge a b]
+    reduce [a,b,c]       = [merge3 a b c]
+    reduce [a,b,c,d,e]   = [merge a b, merge3 c d e]
+    reduce [a,b,c,d,e,f] = [merge3 a b c, merge3 d e f]
+    reduce (a:b:c:d:xs)  = let !x = merge4 a b c d
+                           in x : reduce xs
 
     merge as@(a:as') bs@(b:bs')
       | a `gt` b  = b : merge as  bs'
