@@ -11,6 +11,7 @@ import System.Random (randomRIO)
 -- import qualified Sorts.New3WM    as N3
 -- import qualified Sorts.New3WMOpt as N3O
 import qualified Sorts.New4WM    as N4
+import qualified Sorts.New4WMAlt as N4A
 import qualified Sorts.Old       as Old
 
 
@@ -34,14 +35,15 @@ type ComparisonFunction a = a -> a -> Ordering
 sizes :: [Int]
 -- sizes = replicate 20 3
 -- sizes = replicate 10 1_000_000
-sizes = [ 1_000, 10_000, 100_000, 1_000_000 ]
+sizes = [ 100, 1000, 10_000, 100_000, 1_000_000 ]
 
-sorts :: Ord a => [(String, ComparisonFunction a -> [a] -> [a])]
+sorts :: Ord a => [(String, ComparisonFunction a -> [a] -> [a], [a] -> [a])]
 sorts = [
-    ("Old", Old.sortBy)
+    ("Old", Old.sortBy, Old.sort)
   -- , ("3 Way Merge", N3.sortBy)
   -- , ("3 Way Merge Optimization", N3O.sortBy)
-  , ("4 Way Merge", N4.sortBy)
+  , ("4 Way Merge", N4.sortBy, N4.sort)
+  , ("4 Way Merge Alternative", N4A.sortBy, N4A.sort)
   ]
 
 main :: IO ()
@@ -56,7 +58,7 @@ testAll = testGroup "List tests"
   , makeTest "stability" (isStable @Int) ]
 
 makeTest :: (Ord a, Arbitrary b, Show b) => String -> (([a] -> [a]) -> [b] -> Property) -> TestTree
-makeTest name f = testGroup name $ map (\(n, sortBy) -> testProperty n $ f (sortBy compare)) sorts
+makeTest name f = testGroup name $ map (\(n, _, sort) -> testProperty n $ f sort) sorts
 
 isStable :: Ord a => ([Arg a Int] -> [Arg a Int]) -> [a] -> Property
 isStable sort xs = let result = sort (zipWith Arg xs [0..])
@@ -94,13 +96,13 @@ bgroup' :: (NFData b, Ord a) => String -> String -> [a] -> ([a] -> b) -> Benchma
 bgroup' str prev _data f = bgroup str $ makeBench [str, prev] _data f
 
 makeBench :: (NFData b, Ord a) => [String] -> [a] -> ([a] -> b) -> [Benchmark]
-makeBench strs _data f = forSorts (\name sortBy -> compBench strs name $ bench name (nf (f . sortBy compare) _data))
+makeBench strs _data f = forSorts (\name _ sort -> compBench strs name $ bench name (nf (f . sort) _data))
 
 makeComps :: (Ord a, NFData a, Typeable a) => [a] -> [TestTree]
-makeComps _data = forSorts (\name sortBy -> singleTest name (ComparisonTest _data sortBy))
+makeComps _data = forSorts (\name sortBy _ -> singleTest name (ComparisonTest _data sortBy))
 
-forSorts :: Ord a => (String -> (ComparisonFunction a -> [a] -> [a]) -> b) -> [b]
-forSorts f = map (uncurry f) sorts
+forSorts :: Ord a => (String -> (ComparisonFunction a -> [a] -> [a]) -> ([a] -> [a]) -> b) -> [b]
+forSorts f = map (\(x, y, z) -> f x y z) sorts
 
 compBench :: [String] -> String -> Benchmark -> Benchmark
 compBench strs name

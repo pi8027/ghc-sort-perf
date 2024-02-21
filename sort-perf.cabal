@@ -13,6 +13,7 @@ benchmark sort-perf
                       Sorts.New3WM,
                       Sorts.New3WMOpt,
                       Sorts.New4WM,
+                      Sorts.New4WMAlt,
                       Sorts.Old
     ghc-options:      -Wall -XBangPatterns
     ghc-options:      "-with-rtsopts=-A32m"
