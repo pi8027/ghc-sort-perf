@@ -8,11 +8,8 @@ import Test.Tasty.Bench ( bench, bgroup, nf, Benchmark, bcompare, defaultMain, l
 import Test.Tasty.QuickCheck
 import System.Random (randomRIO)
 
--- import qualified Sorts.New3WM    as N3
--- import qualified Sorts.New3WMOpt as N3O
-import qualified Sorts.New4WM    as N4
-import qualified Sorts.New4WMAlt as N4A
-import qualified Sorts.Old       as Old
+import qualified Sorts.New as New
+import qualified Sorts.Old as Old
 
 
 import Control.Monad (replicateM)
@@ -35,15 +32,15 @@ type ComparisonFunction a = a -> a -> Ordering
 sizes :: [Int]
 -- sizes = replicate 20 3
 -- sizes = replicate 10 1_000_000
-sizes = [ 100, 1000, 10_000, 100_000, 1_000_000 ]
+sizes = [ 1, 5, 25, 100, 1000, 10_000, 100_000, 1_000_000 ]
 
-sorts :: Ord a => [(String, ComparisonFunction a -> [a] -> [a], [a] -> [a])]
+sorts :: Ord a => Show a => [(String, ComparisonFunction a -> [a] -> [a], [a] -> [a])]
 sorts = [
-    ("Old", Old.sortBy, Old.sort)
+  ("Old", Old.sortBy, Old.sort)
   -- , ("3 Way Merge", N3.sortBy)
   -- , ("3 Way Merge Optimization", N3O.sortBy)
-  , ("4 Way Merge", N4.sortBy, N4.sort)
-  , ("4 Way Merge Alternative", N4A.sortBy, N4A.sort)
+  -- , ("4 Way Merge", N4.sortBy, N4.sort)
+  , ("New", New.sortBy, New.sort)
   ]
 
 main :: IO ()
@@ -57,7 +54,7 @@ testAll = testGroup "List tests"
   [ makeTest "correctness" (isCorrect @Int)
   , makeTest "stability" (isStable @Int) ]
 
-makeTest :: (Ord a, Arbitrary b, Show b) => String -> (([a] -> [a]) -> [b] -> Property) -> TestTree
+makeTest :: (Ord a, Arbitrary b, Show b, Show a) => String -> (([a] -> [a]) -> [b] -> Property) -> TestTree
 makeTest name f = testGroup name $ map (\(n, _, sort) -> testProperty n $ f sort) sorts
 
 isStable :: Ord a => ([Arg a Int] -> [Arg a Int]) -> [a] -> Property
@@ -89,19 +86,19 @@ benchmark size = do
       randomSort  = bgroup' "sort" name _data id
       minimumElem = bgroup' "min by sort" name _data (take 1)
       comparisons = testGroup "comparisons" (makeComps _data)
-  pure $ bgroup name [randomSort]
+  pure $ bgroup name [randomSort, comparisons, minimumElem]
 
 
-bgroup' :: (NFData b, Ord a) => String -> String -> [a] -> ([a] -> b) -> Benchmark
+bgroup' :: (NFData b, Ord a, Show a) => String -> String -> [a] -> ([a] -> b) -> Benchmark
 bgroup' str prev _data f = bgroup str $ makeBench [str, prev] _data f
 
-makeBench :: (NFData b, Ord a) => [String] -> [a] -> ([a] -> b) -> [Benchmark]
+makeBench :: (NFData b, Ord a, Show a) => [String] -> [a] -> ([a] -> b) -> [Benchmark]
 makeBench strs _data f = forSorts (\name _ sort -> compBench strs name $ bench name (nf (f . sort) _data))
 
-makeComps :: (Ord a, NFData a, Typeable a) => [a] -> [TestTree]
+makeComps :: (Ord a, NFData a, Typeable a, Show a) => [a] -> [TestTree]
 makeComps _data = forSorts (\name sortBy _ -> singleTest name (ComparisonTest _data sortBy))
 
-forSorts :: Ord a => (String -> (ComparisonFunction a -> [a] -> [a]) -> ([a] -> [a]) -> b) -> [b]
+forSorts :: Ord a => Show a => (String -> (ComparisonFunction a -> [a] -> [a]) -> ([a] -> [a]) -> b) -> [b]
 forSorts f = map (\(x, y, z) -> f x y z) sorts
 
 compBench :: [String] -> String -> Benchmark -> Benchmark

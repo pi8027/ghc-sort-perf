@@ -8,14 +8,12 @@ extra-source-files: CHANGELOG.md
 benchmark sort-perf
     main-is:          Main.hs
     type:             exitcode-stdio-1.0
-    build-depends:    tagged, deepseq, random, tasty, tasty-quickcheck, tasty-bench, base
+    build-depends:    tagged, deepseq, random, tasty, tasty-quickcheck, tasty-bench, base, vector, vector-algorithms
     other-modules:    ComparisonProvider,
-                      Sorts.New3WM,
-                      Sorts.New3WMOpt,
-                      Sorts.New4WM,
-                      Sorts.New4WMAlt,
+                      Sorts.New
                       Sorts.Old
     ghc-options:      -Wall -XBangPatterns
+    ghc-options:      -ddump-simpl -ddump-to-file -dsuppress-all
     ghc-options:      "-with-rtsopts=-A32m"
     ghc-options:      -fproc-alignment=64
     hs-source-dirs:   app
