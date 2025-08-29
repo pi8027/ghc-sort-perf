@@ -25,7 +25,7 @@ import Data.Data (Typeable)
 import Test.Tasty.Patterns.Printer (printAwkExpr)
 
 baseline :: String
-baseline = "Old"
+baseline = "Old (GHC < 9.12.1, 2-way merge)"
 
 type ComparisonFunction a = a -> a -> Ordering
 
@@ -36,11 +36,8 @@ sizes = [ 1, 5, 25, 100, 1000, 10_000, 100_000, 1_000_000 ]
 
 sorts :: Ord a => Show a => [(String, ComparisonFunction a -> [a] -> [a], [a] -> [a])]
 sorts = [
-  ("Old", Old.sortBy, Old.sort)
-  -- , ("3 Way Merge", N3.sortBy)
-  -- , ("3 Way Merge Optimization", N3O.sortBy)
-  -- , ("4 Way Merge", N4.sortBy, N4.sort)
-  , ("New", New.sortBy, New.sort)
+  ("Old (GHC < 9.12.1, 2-way merge)", Old.sortBy, Old.sort)
+  , ("New (GHC >= 9.12.1, 4-way merge)", New.sortBy, New.sort)
   ]
 
 main :: IO ()
