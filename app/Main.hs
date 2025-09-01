@@ -8,9 +8,10 @@ import Test.Tasty.Bench ( bench, bgroup, nf, Benchmark, bcompare, defaultMain, l
 import Test.Tasty.QuickCheck
 import System.Random (randomRIO)
 
-import qualified Sorts.New as New
 import qualified Sorts.Old as Old
-
+import qualified Sorts.New as New
+import qualified Sorts.New3N as New3N
+import qualified Sorts.New4N as New4N
 
 import Control.Monad (replicateM)
 import Control.DeepSeq (NFData)
@@ -25,7 +26,7 @@ import Data.Data (Typeable)
 import Test.Tasty.Patterns.Printer (printAwkExpr)
 
 baseline :: String
-baseline = "Old (GHC < 9.12.1, 2-way merge)"
+baseline = "New (GHC >= 9.12.1, 4-way merge)"
 
 type ComparisonFunction a = a -> a -> Ordering
 
@@ -35,10 +36,11 @@ sizes :: [Int]
 sizes = [ 1, 5, 25, 100, 1000, 10_000, 100_000, 1_000_000 ]
 
 sorts :: Ord a => Show a => [(String, ComparisonFunction a -> [a] -> [a], [a] -> [a])]
-sorts = [
-  ("Old (GHC < 9.12.1, 2-way merge)", Old.sortBy, Old.sort)
-  , ("New (GHC >= 9.12.1, 4-way merge)", New.sortBy, New.sort)
-  ]
+sorts =
+  [("Old (GHC < 9.12.1, 2-way merge)",  Old.sortBy, Old.sort),
+   ("New (GHC >= 9.12.1, 4-way merge)", New.sortBy, New.sort),
+   ("New3N",                            New3N.sortBy, New3N.sort),
+   ("New4N",                            New4N.sortBy, New4N.sort)]
 
 main :: IO ()
 main = do
