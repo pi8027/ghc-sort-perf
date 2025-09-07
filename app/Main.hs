@@ -12,6 +12,7 @@ import qualified Sorts.Old as Old
 import qualified Sorts.New as New
 import qualified Sorts.New3N as New3N
 import qualified Sorts.New4N as New4N
+import qualified Sorts.NewStrict as NewStrict
 
 import Control.Monad (replicateM)
 import Control.DeepSeq (NFData)
@@ -37,10 +38,11 @@ sizes = [ 1, 5, 25, 100, 1000, 10_000, 100_000, 1_000_000 ]
 
 sorts :: Ord a => Show a => [(String, ComparisonFunction a -> [a] -> [a], [a] -> [a])]
 sorts =
-  [("Old (GHC < 9.12.1, 2-way merge)",  Old.sortBy, Old.sort),
-   ("New (GHC >= 9.12.1, 4-way merge)", New.sortBy, New.sort),
-   ("New3N",                            New3N.sortBy, New3N.sort),
-   ("New4N",                            New4N.sortBy, New4N.sort)]
+  [("Old (GHC < 9.12.1, 2-way merge)",        Old.sortBy, Old.sort),
+   ("New (GHC >= 9.12.1, 4-way merge)",       New.sortBy, New.sort),
+   ("New3N",                                  New3N.sortBy, New3N.sort),
+   ("New4N",                                  New4N.sortBy, New4N.sort),
+   ("NewStrict (tail-recursive 4-way merge)", NewStrict.sortBy, NewStrict.sort)]
 
 main :: IO ()
 main = do
